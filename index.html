@@ -956,19 +956,12 @@
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
     <script>
-        // ========== SECURE CONFIGURATION - BACKEND ONLY ==========
+        // ========== CONFIG - GANTI NGROK URL DI SINI ==========
         const CONFIG = {
-            // HANYA Backend URL - semua sensitive data di backend
-            BACKEND_URL: 'https://YOUR-NGROK-URL-HERE.ngrok-free.app',
-            
-            // WhatsApp Number (public, aman)
+            BACKEND_URL: 'https://subliminally-nonexpansive-sheryl.ngrok-free.app',  // GANTI INI!
             WA_NUMBER: '6287717392285',
-            
-            // Map Config
             MAP_CENTER: [-7.955, 112.614],
             MAP_ZOOM: 13,
-            
-            // Tariff
             TARIFF: {
                 MIN_DISTANCE: 2.5,
                 FLAT_RATE: 5000,
@@ -976,13 +969,11 @@
             }
         };
 
-        // Global variables
         let map = null;
         let pickupMarker = null;
         let destinationMarker = null;
         let routingControl = null;
 
-        // Custom marker icons
         const pickupIcon = L.icon({
             iconUrl: 'data:image/svg+xml;base64,' + btoa(`
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="25" height="41">
@@ -1009,7 +1000,6 @@
             popupAnchor: [1, -34]
         });
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             initializeMap();
             showTutorial();
@@ -1024,14 +1014,11 @@
                 }).setView(CONFIG.MAP_CENTER, CONFIG.MAP_ZOOM);
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors',
+                    attribution: '© OpenStreetMap',
                     maxZoom: 19
                 }).addTo(map);
-
-                console.log('Map initialized successfully');
             } catch (error) {
-                console.error('Failed to initialize map:', error);
-                showToast('error', 'Gagal Memuat Peta', 'Pastikan koneksi internet Anda stabil.');
+                console.error('Map error:', error);
             }
         }
 
@@ -1102,9 +1089,8 @@
             try {
                 const text = await navigator.clipboard.readText();
                 document.getElementById(inputId).value = text;
-                showToast('success', 'Berhasil!', 'Link berhasil di-paste dari clipboard.');
+                showToast('success', 'Berhasil!', 'Link berhasil di-paste.');
             } catch (error) {
-                console.error('Failed to paste:', error);
                 showToast('warning', 'Paste Manual', 'Silakan paste manual dengan Tap & Hold → Paste.');
             }
         }
@@ -1114,7 +1100,7 @@
             const destinationLink = document.getElementById('destinationLink').value.trim();
 
             if (!pickupLink || !destinationLink) {
-                showToast('warning', 'Data Belum Lengkap', 'Mohon isi link penjemputan dan tujuan terlebih dahulu.');
+                showToast('warning', 'Data Belum Lengkap', 'Mohon isi link penjemputan dan tujuan.');
                 return;
             }
 
@@ -1126,7 +1112,8 @@
             try {
                 const sessionId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-                // Backend akan handle API key validation
+                console.log('Sending to:', `${CONFIG.BACKEND_URL}/api/convert-gmaps`);
+
                 const response = await fetch(`${CONFIG.BACKEND_URL}/api/convert-gmaps`, {
                     method: 'POST',
                     headers: {
@@ -1138,21 +1125,26 @@
                     })
                 });
 
+                console.log('Response status:', response.status);
+
                 if (!response.ok) {
-                    throw new Error('Gagal menghubungi server');
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Error(`Server error: ${response.status}`);
                 }
 
                 const data = await response.json();
+                console.log('Response data:', data);
 
                 if (data.status !== 'success' || !data.results || data.results.length !== 2) {
-                    throw new Error('Gagal mengkonversi link Google Maps');
+                    throw new Error('Gagal mengkonversi link');
                 }
 
                 const pickupCoords = data.results[0];
                 const destCoords = data.results[1];
 
                 if (pickupCoords.status !== 'success' || destCoords.status !== 'success') {
-                    throw new Error('Link Google Maps tidak valid atau tidak dapat diproses');
+                    throw new Error('Link tidak valid');
                 }
 
                 document.getElementById('pickupLat').value = pickupCoords.lat;
@@ -1161,11 +1153,11 @@
                 document.getElementById('destLng').value = destCoords.lng;
 
                 displayRoute(pickupCoords, destCoords);
-                showToast('success', 'Berhasil!', 'Rute dan tarif berhasil dihitung.');
+                showToast('success', 'Berhasil!', 'Rute berhasil dihitung.');
 
             } catch (error) {
-                console.error('Error:', error);
-                showToast('error', 'Gagal Memproses', error.message || 'Pastikan link Google Maps yang Anda masukkan valid.');
+                console.error('Calculate error:', error);
+                showToast('error', 'Gagal Memproses', error.message);
             } finally {
                 calculateBtn.disabled = false;
                 calculateBtn.innerHTML = originalText;
@@ -1178,10 +1170,10 @@
             if (routingControl) map.removeControl(routingControl);
 
             const pickupLatLng = L.latLng(pickupCoords.lat, pickupCoords.lng);
-            pickupMarker = L.marker(pickupLatLng, { icon: pickupIcon }).addTo(map).bindPopup('Titik Penjemputan');
+            pickupMarker = L.marker(pickupLatLng, { icon: pickupIcon }).addTo(map).bindPopup('Penjemputan');
 
             const destLatLng = L.latLng(destCoords.lat, destCoords.lng);
-            destinationMarker = L.marker(destLatLng, { icon: destinationIcon }).addTo(map).bindPopup('Titik Tujuan');
+            destinationMarker = L.marker(destLatLng, { icon: destinationIcon }).addTo(map).bindPopup('Tujuan');
 
             routingControl = L.Routing.control({
                 waypoints: [pickupLatLng, destLatLng],
@@ -1191,8 +1183,7 @@
                 show: false,
                 lineOptions: { styles: [{ color: '#FF0000', weight: 5, opacity: 0.8 }] }
             }).on('routesfound', function(e) {
-                const routes = e.routes;
-                const summary = routes[0].summary;
+                const summary = e.routes[0].summary;
                 const distance = (summary.totalDistance / 1000).toFixed(2);
 
                 let fare;
@@ -1207,10 +1198,9 @@
                 document.getElementById('distanceDisplay').textContent = `${distance} km`;
                 document.getElementById('costDisplay').textContent = `Rp ${fare.toLocaleString('id-ID')}`;
                 document.getElementById('resultSection').classList.add('show');
-                document.getElementById('mapInstruction').textContent = `✓ Rute berhasil ditampilkan: ${distance} km - Rp ${fare.toLocaleString('id-ID')}`;
+                document.getElementById('mapInstruction').textContent = `✓ Rute: ${distance} km - Rp ${fare.toLocaleString('id-ID')}`;
 
-                const bounds = L.latLngBounds(pickupLatLng, destLatLng);
-                map.fitBounds(bounds, { padding: [50, 50] });
+                map.fitBounds(L.latLngBounds(pickupLatLng, destLatLng), { padding: [50, 50] });
             }).addTo(map);
         }
 
@@ -1225,19 +1215,18 @@
             const destLng = document.getElementById('destLng').value;
 
             if (!name) {
-                showToast('warning', 'Nama Belum Diisi', 'Mohon isi nama Anda terlebih dahulu.');
+                showToast('warning', 'Nama Belum Diisi', 'Mohon isi nama Anda.');
                 return;
             }
 
             if (!distance || !cost) {
-                showToast('warning', 'Belum Hitung Tarif', 'Klik tombol "Hitung Tarif" terlebih dahulu.');
+                showToast('warning', 'Belum Hitung Tarif', 'Klik "Hitung Tarif" terlebih dahulu.');
                 return;
             }
 
             const pickupLink = `https://maps.google.com/?q=${pickupLat},${pickupLng}`;
             const destLink = `https://maps.google.com/?q=${destLat},${destLng}`;
 
-            // Format WhatsApp - TANPA EMOJI, BOLD PADA VALUE
             let message = `Halo admin, saya *${name}* ingin memesan Ojek UBER:\n\n`;
             message += `Titik Penjemputan:\n${pickupLink}\n\n`;
             message += `Titik Tujuan:\n${destLink}\n\n`;
@@ -1245,16 +1234,12 @@
             message += `Total Tarif: *Rp ${parseInt(cost).toLocaleString('id-ID')}*\n`;
             message += `Metode Pembayaran: *${payment}*`;
 
-            const encodedMessage = encodeURIComponent(message);
-            const waUrl = `https://wa.me/${CONFIG.WA_NUMBER}?text=${encodedMessage}`;
+            const waUrl = `https://wa.me/${CONFIG.WA_NUMBER}?text=${encodeURIComponent(message)}`;
 
-            // Submit ke backend (backend akan forward ke Google Sheets)
             try {
                 await fetch(`${CONFIG.BACKEND_URL}/api/submit-order`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         nama: name,
                         linkPenjemputan: pickupLink,
@@ -1265,13 +1250,10 @@
                         timestamp: new Date().toISOString()
                     })
                 });
-                
-                console.log('Order submitted to backend');
             } catch (error) {
-                console.error('Failed to submit order:', error);
+                console.error('Submit error:', error);
             }
 
-            // Buka WhatsApp
             window.location.href = waUrl;
         }
 
@@ -1297,7 +1279,7 @@
                     <div style="font-weight: 600; color: var(--blue-dark); margin-bottom: 0.25rem;">${title}</div>
                     <div style="font-size: 0.875rem; color: var(--gray-700);">${message}</div>
                 </div>
-                <button onclick="this.parentElement.remove()" style="background: none; border: none; font-size: 20px; cursor: pointer; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: var(--transition-base);">×</button>
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
             `;
             toast.style.display = 'flex';
             toast.style.alignItems = 'center';
