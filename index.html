@@ -61,7 +61,6 @@
             overflow: hidden;
         }
 
-        /* Enhanced wave animations for mobile visibility */
         .header::before,
         .header::after {
             content: '';
@@ -97,7 +96,6 @@
             66% { transform: translate(10%, -10%) rotate(240deg) scale(1); }
         }
 
-        /* Enhanced particles for mobile */
         .header-particles {
             position: absolute;
             width: 100%;
@@ -113,10 +111,6 @@
             background: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
             animation: float 5s ease-in-out infinite;
-        }
-
-        /* Larger particles for mobile visibility */
-        .particle {
             width: 6px;
             height: 6px;
         }
@@ -132,7 +126,6 @@
             50% { transform: translateY(-40px) scale(1.3); opacity: 1; }
         }
 
-        /* Mobile enhanced animations */
         @media (max-width: 768px) {
             .particle {
                 width: 10px;
@@ -143,13 +136,6 @@
                 0%, 100% { transform: translateY(0) scale(1); opacity: 0.8; }
                 50% { transform: translateY(-60px) scale(1.5); opacity: 1; }
             }
-            
-            @keyframes wave1 {
-                0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1.2); }
-                25% { transform: translate(15%, -15%) rotate(90deg) scale(1.4); }
-                50% { transform: translate(-15%, 15%) rotate(180deg) scale(1.2); }
-                75% { transform: translate(15%, 15%) rotate(270deg) scale(1.4); }
-            }
         }
 
         .header-content {
@@ -157,7 +143,6 @@
             z-index: 1;
         }
 
-        /* PREMIUM TEXT STYLING */
         .header h1 {
             font-size: 3rem;
             font-weight: 800;
@@ -347,7 +332,6 @@
             padding: 1.25rem;
         }
 
-        /* COMPACT STEPS */
         .step {
             display: flex;
             gap: 0.75rem;
@@ -411,7 +395,6 @@
             box-shadow: var(--shadow-lg);
         }
 
-        /* MOBILE OPTIMIZATION FOR MODAL */
         @media (max-width: 768px) {
             .modal-content {
                 margin: 0 10px;
@@ -451,9 +434,7 @@
             }
         }
 
-        /* REST OF CSS CONTINUES IN NEXT SECTION... */
-        /* Container, Card, Form, Map, Buttons, etc. */
-        
+        /* REST OF CSS */
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -704,11 +685,7 @@
             .result-grid { grid-template-columns: 1fr; }
         }
     </style>
-</head>
-<body>
-    <!-- BODY CONTENT CONTINUES IN PART 2... -->
-    <!-- LANJUTAN DARI PART 1 - HTML BODY + JAVASCRIPT -->
-
+</head><body>
     <!-- Assistive Touch Button -->
     <div class="assistive-touch" id="assistiveTouch" title="Buka Panduan">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -718,7 +695,7 @@
         </svg>
     </div>
 
-    <!-- Compact Tutorial Modal (5 Steps - Clarified) -->
+    <!-- Compact Tutorial Modal -->
     <div class="tutorial-modal" id="tutorialModal">
         <div class="modal-overlay" onclick="closeTutorial()"></div>
         <div class="modal-content">
@@ -954,7 +931,7 @@
                 <input type="hidden" id="destLat" />
                 <input type="hidden" id="destLng" />
 
-                <!-- Metode Pembayaran (Cash → Tunai) -->
+                <!-- Metode Pembayaran -->
                 <div class="form-group" style="margin-top: 1.5rem;">
                     <label class="form-label" for="payment">Metode Pembayaran</label>
                     <select id="payment" class="form-select" required>
@@ -979,26 +956,14 @@
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
     <script>
-        // ========== CONFIGURATION (NGROK VERSION) ==========
+        // ========== CONFIGURATION ==========
         const CONFIG = {
-            // ⚠️ PENTING: Ganti URL ini setiap kali restart ngrok!
-            // Jalankan ngrok, copy URL, paste di sini
             API_URL: 'https://subliminally-nonexpansive-sheryl.ngrok-free.dev/api/convert-gmaps',
-            
-            // API Key (harus sama dengan backend)
             API_KEY: 'UBER_SECRET_KEY_2025_MALANG_d8f9a3b2c1e4',
-            
-            // Google Sheets Apps Script URL
             SHEETS_URL: 'https://script.google.com/macros/s/AKfycbywySXlwQD3sgZboqnzcoHHMzKwLoPAA9i8olmU4nhGefrXeQvr0wjpvD_WkAnsFsdQ/exec',
-            
-            // WhatsApp Admin Number
             WA_NUMBER: '6287717392285',
-            
-            // Map Default Center (Malang)
             MAP_CENTER: [-7.955, 112.614],
             MAP_ZOOM: 13,
-            
-            // Tariff Rules
             TARIFF: {
                 MIN_DISTANCE: 2.5,
                 FLAT_RATE: 5000,
@@ -1267,13 +1232,15 @@
             const pickupLink = `https://maps.google.com/?q=${pickupLat},${pickupLng}`;
             const destLink = `https://maps.google.com/?q=${destLat},${destLng}`;
 
-            let message = `Halo admin, saya ${name} ingin memesan Ojek UBER:\n\n`;
-            message += `Titik Penjemputan:\n${pickupLink}\n\n`;
-            message += `Titik Tujuan:\n${destLink}\n\n`;
-            message += `Jarak: ${distance} km\n`;
-            message += `Total Tarif: Rp${parseInt(cost).toLocaleString('id-ID')}\n`;
-            message += `Metode Pembayaran: ${payment}`;
+            // ✅ FIXED: Format WhatsApp dengan *bold* untuk iOS & Android
+            let message = `Halo admin, saya *${name}* ingin memesan Ojek UBER:\n\n`;
+            message += `📍 *Titik Penjemputan:*\n${pickupLink}\n\n`;
+            message += `🎯 *Titik Tujuan:*\n${destLink}\n\n`;
+            message += `📏 *Jarak:* ${distance} km\n`;
+            message += `💰 *Total Tarif:* Rp${parseInt(cost).toLocaleString('id-ID')}\n`;
+            message += `💳 *Metode Pembayaran:* ${payment}`;
 
+            // ✅ FIXED: Proper encoding untuk iOS & Android
             const encodedMessage = encodeURIComponent(message);
             const waUrl = `https://wa.me/${CONFIG.WA_NUMBER}?text=${encodedMessage}`;
 
@@ -1290,7 +1257,8 @@
                 console.error('Failed to send to Google Sheets:', error);
             }
 
-            window.open(waUrl, '_blank');
+            // ✅ FIXED: Universal link opening untuk iOS & Android
+            window.location.href = waUrl;
         }
 
         async function sendToGoogleSheets(data) {
