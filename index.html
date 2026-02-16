@@ -434,7 +434,7 @@
             }
         }
 
-        /* REST OF CSS */
+        /* REST OF CSS (Container, Card, Form, Map, Buttons, Toast) */
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -956,14 +956,19 @@
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
     <script>
-        // ========== CONFIGURATION ==========
+        // ========== SECURE CONFIGURATION - BACKEND ONLY ==========
         const CONFIG = {
-            API_URL: 'https://subliminally-nonexpansive-sheryl.ngrok-free.dev/api/convert-gmaps',
-            API_KEY: 'UBER_SECRET_KEY_2025_MALANG_d8f9a3b2c1e4',
-            SHEETS_URL: 'https://script.google.com/macros/s/AKfycbywySXlwQD3sgZboqnzcoHHMzKwLoPAA9i8olmU4nhGefrXeQvr0wjpvD_WkAnsFsdQ/exec',
+            // HANYA Backend URL - semua sensitive data di backend
+            BACKEND_URL: 'https://YOUR-NGROK-URL-HERE.ngrok-free.app',
+            
+            // WhatsApp Number (public, aman)
             WA_NUMBER: '6287717392285',
+            
+            // Map Config
             MAP_CENTER: [-7.955, 112.614],
             MAP_ZOOM: 13,
+            
+            // Tariff
             TARIFF: {
                 MIN_DISTANCE: 2.5,
                 FLAT_RATE: 5000,
@@ -1121,11 +1126,11 @@
             try {
                 const sessionId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-                const response = await fetch(CONFIG.API_URL, {
+                // Backend akan handle API key validation
+                const response = await fetch(`${CONFIG.BACKEND_URL}/api/convert-gmaps`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': CONFIG.API_KEY
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         session_id: sessionId,
@@ -1232,53 +1237,42 @@
             const pickupLink = `https://maps.google.com/?q=${pickupLat},${pickupLng}`;
             const destLink = `https://maps.google.com/?q=${destLat},${destLng}`;
 
-            // ✅ FIXED: Format WhatsApp dengan *bold* untuk iOS & Android
+            // Format WhatsApp - TANPA EMOJI, BOLD PADA VALUE
             let message = `Halo admin, saya *${name}* ingin memesan Ojek UBER:\n\n`;
-            message += `📍 *Titik Penjemputan:*\n${pickupLink}\n\n`;
-            message += `🎯 *Titik Tujuan:*\n${destLink}\n\n`;
-            message += `📏 *Jarak:* ${distance} km\n`;
-            message += `💰 *Total Tarif:* Rp${parseInt(cost).toLocaleString('id-ID')}\n`;
-            message += `💳 *Metode Pembayaran:* ${payment}`;
+            message += `Titik Penjemputan:\n${pickupLink}\n\n`;
+            message += `Titik Tujuan:\n${destLink}\n\n`;
+            message += `Jarak: *${distance} km*\n`;
+            message += `Total Tarif: *Rp ${parseInt(cost).toLocaleString('id-ID')}*\n`;
+            message += `Metode Pembayaran: *${payment}*`;
 
-            // ✅ FIXED: Proper encoding untuk iOS & Android
             const encodedMessage = encodeURIComponent(message);
             const waUrl = `https://wa.me/${CONFIG.WA_NUMBER}?text=${encodedMessage}`;
 
+            // Submit ke backend (backend akan forward ke Google Sheets)
             try {
-                await sendToGoogleSheets({
-                    nama: name,
-                    linkPenjemputan: pickupLink,
-                    linkTujuan: destLink,
-                    jarak: distance,
-                    tarif: cost,
-                    metodePembayaran: payment
-                });
-            } catch (error) {
-                console.error('Failed to send to Google Sheets:', error);
-            }
-
-            // ✅ FIXED: Universal link opening untuk iOS & Android
-            window.location.href = waUrl;
-        }
-
-        async function sendToGoogleSheets(data) {
-            if (!CONFIG.SHEETS_URL || CONFIG.SHEETS_URL.includes('PASTE_YOUR')) {
-                console.warn('Google Sheets URL not configured');
-                return;
-            }
-
-            try {
-                await fetch(CONFIG.SHEETS_URL, {
+                await fetch(`${CONFIG.BACKEND_URL}/api/submit-order`, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nama: name,
+                        linkPenjemputan: pickupLink,
+                        linkTujuan: destLink,
+                        jarak: distance,
+                        tarif: cost,
+                        metodePembayaran: payment,
+                        timestamp: new Date().toISOString()
+                    })
                 });
-                console.log('Data sent to Google Sheets');
+                
+                console.log('Order submitted to backend');
             } catch (error) {
-                console.error('Error sending to Google Sheets:', error);
-                throw error;
+                console.error('Failed to submit order:', error);
             }
+
+            // Buka WhatsApp
+            window.location.href = waUrl;
         }
 
         function showToast(type, title, message) {
